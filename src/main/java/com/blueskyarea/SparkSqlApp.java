@@ -1,6 +1,7 @@
 package com.blueskyarea;
 
 import static org.apache.spark.sql.functions.row_number;
+import static org.apache.spark.sql.functions.desc;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -26,7 +27,6 @@ public class SparkSqlApp implements Serializable {
     	JavaSparkContext jsc = new JavaSparkContext(conf);
     	
     	// create SqlContext
-    	//SQLContext sqlCtx = new SQLContext(jsc);
     	SQLContext sqlCtx = new HiveContext(jsc);
     	
     	// create data
@@ -38,24 +38,16 @@ public class SparkSqlApp implements Serializable {
     	DataFrame dataFrame = sqlCtx.createDataFrame(recordRdd, RecordData.class);
     	dataFrame.printSchema();
     	
-    	// register to temporary table
-    	//dataFrame.registerTempTable("origin_table");
-    	
     	// query
     	DataFrame orderByJapanese = sqlApp.sorting(dataFrame, "japanese");
-    	//orderByJapanese.registerTempTable("japanese_table");
     	orderByJapanese.show();
     	DataFrame orderByMathematics = sqlApp.sorting(dataFrame, "mathematics");
-    	//orderByMathematics.registerTempTable("mathematics_table");
     	orderByMathematics.show();
     	DataFrame orderByEnglish = sqlApp.sorting(dataFrame, "english");
-    	//orderByEnglish.registerTempTable("english_table");
     	orderByEnglish.show();
     	DataFrame orderBySocial = sqlApp.sorting(dataFrame, "social");
-    	//orderBySocial.registerTempTable("social_table");
     	orderBySocial.show();
     	DataFrame orderByScience = sqlApp.sorting(dataFrame, "science");
-    	//orderByScience.registerTempTable("science_table");
     	orderByScience.show();
     	
     	DataFrame cal = sqlApp.calcTotalScore(dataFrame, orderByJapanese, orderByMathematics, orderByEnglish, orderBySocial, orderByScience);
@@ -65,9 +57,11 @@ public class SparkSqlApp implements Serializable {
     private List<RecordData> createData() {
     	Random rnd = new Random();
     	List<RecordData> salesDataList = new ArrayList<>();
-    	salesDataList.add(new RecordData("A", rnd.nextInt(101), rnd.nextInt(101), rnd.nextInt(101), rnd.nextInt(101), rnd.nextInt(101)));
-    	salesDataList.add(new RecordData("B", rnd.nextInt(101), rnd.nextInt(101), rnd.nextInt(101), rnd.nextInt(101), rnd.nextInt(101)));
-    	salesDataList.add(new RecordData("C", rnd.nextInt(101), rnd.nextInt(101), rnd.nextInt(101), rnd.nextInt(101), rnd.nextInt(101)));
+    	salesDataList.add(new RecordData("Abe", rnd.nextInt(101), rnd.nextInt(101), rnd.nextInt(101), rnd.nextInt(101), rnd.nextInt(101)));
+    	salesDataList.add(new RecordData("Bush", rnd.nextInt(101), rnd.nextInt(101), rnd.nextInt(101), rnd.nextInt(101), rnd.nextInt(101)));
+    	salesDataList.add(new RecordData("Clinton", rnd.nextInt(101), rnd.nextInt(101), rnd.nextInt(101), rnd.nextInt(101), rnd.nextInt(101)));
+    	salesDataList.add(new RecordData("Donald", rnd.nextInt(101), rnd.nextInt(101), rnd.nextInt(101), rnd.nextInt(101), rnd.nextInt(101)));
+    	salesDataList.add(new RecordData("Edison", rnd.nextInt(101), rnd.nextInt(101), rnd.nextInt(101), rnd.nextInt(101), rnd.nextInt(101)));
     	return salesDataList;
     }
     
@@ -85,33 +79,10 @@ public class SparkSqlApp implements Serializable {
     			new Column("originalDf.mathematics"),
     			new Column("originalDf.english"),
     			new Column("originalDf.social"),
-    			new Column("originalDf.science"));
+    			new Column("originalDf.science")).orderBy(desc("totalScore"));
     }
-    
-    /*private DataFrame scoring2(DataFrame df) {
-    	return df.select(org.apache.spark.sql.functions.row_number().over(Window.partitionBy().orderBy()), new Column("name"), new Column("sales"));
-    }
-    
-    private JavaRDD<ScoreData> scoring(DataFrame df) {
-    	return df.javaRDD().zipWithIndex().mapPartitions(new FlatMapFunction<Iterator<Tuple2<Row, Long>>, ScoreData>() {
 
-			@Override
-			public Iterable<ScoreData> call(Iterator<Tuple2<Row, Long>> t)
-					throws Exception {
-				List<ScoreData> scoreDataList = new ArrayList<>();
-				if(t.hasNext()) {
-					Tuple2<Row, Long> data = t.next();
-					ScoreData sd = new ScoreData(data._1.getString(0), data._2);
-					scoreDataList.add(sd);
-				}
-				return scoreDataList;
-			}
-    		
-    	});
-    }*/
-    
     public class RecordData implements Serializable {
-
 		private static final long serialVersionUID = -8262025927050735682L;
 		private String name;
 		private Integer japanese;
@@ -154,22 +125,4 @@ public class SparkSqlApp implements Serializable {
     		return science;
     	}
     }
-    
-    /*public class ScoreData {
-    	private String name;
-    	private Long score;
-    	
-    	public ScoreData(String name, Long score) {
-    		this.name = name;
-    		this.score = score;
-    	}
-    	
-    	public String getName() {
-    		return name;
-    	}
-    	
-    	public Long getScore() {
-    		return score;
-    	}
-    }*/
 }
