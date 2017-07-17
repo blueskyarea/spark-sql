@@ -38,7 +38,7 @@ public class SparkSqlApp implements Serializable {
     	DataFrame dataFrame = sqlCtx.createDataFrame(recordRdd, RecordData.class);
     	dataFrame.printSchema();
     	
-    	// query
+    	// calculation
     	DataFrame orderByJapanese = sqlApp.sorting(dataFrame, "japanese");
     	orderByJapanese.show();
     	DataFrame orderByMathematics = sqlApp.sorting(dataFrame, "mathematics");
